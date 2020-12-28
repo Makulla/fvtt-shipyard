@@ -3,7 +3,7 @@
     "title": "Boatyface",
     "description": "A module for the Foundry Virtual Tabletop framework.",
     "author": "Maku",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "minimumCoreVersion": "0.7.9",
     "compatibleCoreVersion": "0.7.9",
     "scripts": [
