@@ -1,0 +1,14 @@
+{
+    "name": "fvtt-boatyface",
+    "private": true,
+    "version": "1.0.0",
+    "description": "A module for the Foundry Virtual Tabletop framework.",
+    "author": {
+        "name": "Maku"
+    },
+    "devDependencies": {
+        "typescript": "3.4.3",
+        "webpack": "4.44.2",
+        "webpack-cli": "3.3.12"
+    }
+}
