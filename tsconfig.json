@@ -1,10 +1,11 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "module": "commonjs",
-    "outDir": "dist/scripts",
+    "module": "ES6",
+    "outDir": "tsc",
     "strict": true,
     "rootDir": "src",
+    "sourceMap": false,
     "typeRoots": ["types/foundry"]
   }
 }
