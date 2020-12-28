@@ -8,7 +8,8 @@ interface SliderData {
 
 export interface DialogData {
     cargo: SliderData;
+    outputTableId: string;
 }
 
-declare let dialogTemplate: (data: DialogData) => string;
-export default dialogTemplate;
+declare let sliderTemplate: (data: DialogData) => string;
+export default sliderTemplate;

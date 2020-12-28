@@ -1,12 +1,14 @@
-import dialogTemplate, { DialogData } from "../templates/dialog.handlebars";
+import sliderTemplate, { DialogData } from "../templates/sliders.handlebars";
+import tableTemplate from "../templates/table.handlebars";
 
 function showDialog() {
     const cargoSliderId = "boatyfaceCargoSlider";
-    const data: DialogData = { cargo: { min: 1, max: 5, value: 3, id: cargoSliderId } };
+    const outputTableId = "boatyfaceOutputTableId";
+    const data: DialogData = { outputTableId, cargo: { min: 1, max: 5, value: 3, id: cargoSliderId } };
 
     const d = new Dialog({
         title: "Boatyface",
-        content: dialogTemplate(data),
+        content: sliderTemplate(data) + tableTemplate(data),
         buttons: {
             ok: {
                 icon: '<i class="fas fa-check"></i>',
@@ -16,11 +18,17 @@ function showDialog() {
         },
         default: "ok",
         render: html => {
+            const table = (html.querySelector(`#${outputTableId}`) as HTMLTableElement);
             const slider = (html.querySelector(`#${cargoSliderId}`) as HTMLFormElement);
+
+            table.innerHTML = tableTemplate(data);
+
             slider.addEventListener("change", () => 
             {
+                data.cargo.delta = data.cargo.value - slider.value;
                 data.cargo.value = slider.value;
-                html.innerHTML = dialogTemplate(data);
+                
+                table.innerHTML = tableTemplate(data);
             })
         },
         close: html => { },
@@ -32,7 +40,4 @@ function showDialog() {
 }
 
 Hooks.on("init", () => { });
-
-Hooks.on("ready", () => {     
-    (<any>window)["showBoatyface"] = () => showDialog();
-});
+Hooks.on("ready", () => { (<any>window)["showBoatyface"] = () => showDialog(); });
