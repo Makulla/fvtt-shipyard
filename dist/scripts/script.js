@@ -93,10 +93,36 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _templates_dialog_handlebars__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var _templates_dialog_handlebars__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_templates_dialog_handlebars__WEBPACK_IMPORTED_MODULE_0__);
 
+function showDialog() {
+    var cargoSliderId = "boatyfaceCargoSlider";
+    var data = { cargo: { min: 1, max: 5, value: 3, id: cargoSliderId } };
+    var d = new Dialog({
+        title: "Boatyface",
+        content: _templates_dialog_handlebars__WEBPACK_IMPORTED_MODULE_0___default()(data),
+        buttons: {
+            ok: {
+                icon: '<i class="fas fa-check"></i>',
+                label: "OK",
+                callback: function () { return console.log("Chose One"); }
+            }
+        },
+        default: "ok",
+        render: function (html) {
+            var slider = html.querySelector("#" + cargoSliderId);
+            slider.addEventListener("change", function () {
+                data.cargo.value = slider.value;
+                html.innerHTML = _templates_dialog_handlebars__WEBPACK_IMPORTED_MODULE_0___default()(data);
+            });
+        },
+        close: function (html) { },
+    }, {
+        jQuery: false
+    });
+    d.render(true);
+}
 Hooks.on("init", function () { });
 Hooks.on("ready", function () {
-    debugger;
-    console.log(_templates_dialog_handlebars__WEBPACK_IMPORTED_MODULE_0___default()());
+    window["showBoatyface"] = function () { return showDialog(); };
 });
 
 
@@ -107,7 +133,24 @@ Hooks.on("ready", function () {
 var Handlebars = __webpack_require__(2);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
 module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
-    return "<div>Cargo</div>\r\n<input type=\"range\">\r\n<hr>\r\n<table>\r\n    <tr>\r\n        <td>Cargo</td>\r\n        <td></td>\r\n    </tr>\r\n</table>";
+    var stack1, alias1=container.lambda, alias2=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
+        if (Object.prototype.hasOwnProperty.call(parent, propertyName)) {
+          return parent[propertyName];
+        }
+        return undefined
+    };
+
+  return "<div>Cargo</div>\r\n<input type=\"range\" value="
+    + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"cargo") : depth0)) != null ? lookupProperty(stack1,"value") : stack1), depth0))
+    + " id="
+    + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"cargo") : depth0)) != null ? lookupProperty(stack1,"id") : stack1), depth0))
+    + " min="
+    + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"cargo") : depth0)) != null ? lookupProperty(stack1,"min") : stack1), depth0))
+    + " max="
+    + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"cargo") : depth0)) != null ? lookupProperty(stack1,"max") : stack1), depth0))
+    + " step=\"1\">\r\n<hr>\r\n<table>\r\n    <tr>\r\n        <td>Cargo</td>\r\n        <td>"
+    + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"cargo") : depth0)) != null ? lookupProperty(stack1,"value") : stack1), depth0))
+    + "</td>\r\n    </tr>\r\n</table>";
 },"useData":true});
 
 /***/ }),
