@@ -7,5 +7,8 @@
     "minimumCoreVersion": "0.7.9",
     "scripts": [
         "dist/scripts/script.js"
-    ]
+    ],
+    "url": "https://github.com/Makulla/fvtt-boatyface",
+    "manifest": "https://raw.githubusercontent.com/Makulla/fvtt-boatyface/main/module.json",
+    "download": "https://github.com/Makulla/fvtt-boatyface/archive/main.zip"
   }
