@@ -1,8 +1,10 @@
-import sliderTemplate, { Delta, DerivedAttribute, DialogData, MainAttribute, ShipLevel } from "../templates/sliders.handlebars";
+import sliderTemplate, { Delta, DerivedAttribute, DialogData, MainAttribute, ShipLevel, ShipLevelType } from "../templates/sliders.handlebars";
 import tableTemplate from "../templates/table.handlebars";
 import mainAttributesTemplate from "../templates/mainAttributes.handlebars"
 
-function deriveAttributes(shipLevels: readonly ShipLevel[], previous?: readonly DerivedAttribute[]): DerivedAttribute[] {
+type ShipLevelLookup = Record<ShipLevelType, number>;
+
+function deriveAttributes(shipLevels: ShipLevelLookup, previous?: readonly DerivedAttribute[]): DerivedAttribute[] {
 
     const result: DerivedAttribute[] = [];
 
@@ -27,26 +29,43 @@ function deriveAttributes(shipLevels: readonly ShipLevel[], previous?: readonly 
     return result;
 }
 
-function deriveMainAttributes(shipLevels: readonly ShipLevel[], previous?: readonly MainAttribute[]): MainAttribute[] {
+function deriveMainAttributes(shipLevels: ShipLevelLookup, previous?: readonly MainAttribute[]): MainAttribute[] {
 
     const result: MainAttribute[] = [];
 
-    const add = (attribute: Pick<MainAttribute, "label" | "type" | "value">) => 
+    const add = (attribute: Pick<MainAttribute, "label" | "type" | "value">) => {
+        const value = Math.floor(attribute.value);
         result.push({ 
-            ...attribute, 
-            delta: buildDelta(attribute.value - (previous?.[result.length].value ?? attribute.value)),
+            ...attribute,
+            value,
+            delta: buildDelta(value - (previous?.[result.length].value ?? value)),
             shortLabel: attribute.label.substr(0, 3).toUpperCase()
         });
-        
+    }
 
-    add({ type: "strength", label: "Strength", value: 10 });
-    add({ type: "dexterity", label: "Dexterity", value: 10 });
-    add({ type: "constitution", label: "Constitution", value: 10 });
+    add({ type: "strength", label: "Strength", value: 10 + shipLevels.hull + (shipLevels.smallWeaponSlots + shipLevels.cargo) * 0.25 });
+    add({ type: "dexterity", label: "Dexterity", value: 10 + shipLevels.sails + shipLevels.voidCoreStrength - shipLevels.cargo * 0.5 - shipLevels.hull * 0.5 });
+    add({ type: "constitution", label: "Constitution", value: 10 + shipLevels.hull * 0.5 + shipLevels.voidCoreEfficiency * 2.0 - shipLevels.creatureCapacity });
     add({ type: "intelligence", label: "Intelligence", value: 0 });
     add({ type: "wisdom", label: "Wisdom", value: 0 });
     add({ type: "charisma", label: "Charisma", value: 0 });
 
     return result;
+}
+
+function asShipLevelLookup(shipLevels: readonly ShipLevel[]): ShipLevelLookup {
+    const lookup = (type: ShipLevelType) => shipLevels.filter(level => level.type === type)[0].value;
+
+    return {
+        cargo: lookup("cargo"),
+        chambers: lookup("chambers"),
+        creatureCapacity: lookup("creatureCapacity"),
+        hull: lookup("hull"),
+        sails: lookup("sails"),
+        smallWeaponSlots: lookup("smallWeaponSlots"),
+        voidCoreEfficiency: lookup("voidCoreEfficiency"),
+        voidCoreStrength: lookup("voidCoreStrength")
+    }
 }
 
 function buildDelta(delta: number): Delta | undefined {
@@ -78,8 +97,8 @@ function showDialog() {
         { type: "chambers", label: "Chambers", min: 0, max: 4, value: 0 }
     ];
 
-    const mainAttributes = deriveMainAttributes(levels);
-    const derived = deriveAttributes(levels);
+    const mainAttributes = deriveMainAttributes(asShipLevelLookup(levels));
+    const derived = deriveAttributes(asShipLevelLookup(levels));
 
     const initialLevels = cloneArray(levels);
     const initialMainAttributes = cloneArray(mainAttributes);
@@ -119,8 +138,8 @@ function showDialog() {
                     const delta = level.value - initialLevels[index].value;
                     level.delta = buildDelta(delta);
 
-                    data.mainAttributes = deriveMainAttributes(levels, initialMainAttributes);
-                    data.derived = deriveAttributes(levels, initialDerived);
+                    data.mainAttributes = deriveMainAttributes(asShipLevelLookup(levels), initialMainAttributes);
+                    data.derived = deriveAttributes(asShipLevelLookup(levels), initialDerived);
 
                     updateOutputTables(dialogContentRoot, data);
                 });

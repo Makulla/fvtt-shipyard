@@ -6,7 +6,7 @@ module.exports = function (delta) {
     return "<span style='color:" 
         + color 
         + "'>("
-        + (delta.isPositive ? "+" : "-")
+        + (delta.isPositive ? "+" : "")
         + (delta ? delta.value : 0)
         + ")</span>";
 };

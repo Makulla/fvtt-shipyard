@@ -1,4 +1,4 @@
-export type ShipAttributeType = 
+export type ShipLevelType = 
       "hull" 
     | "cargo"
     | "sails" 
@@ -42,7 +42,7 @@ interface BaseAttribute<TAttributeType> {
     type: TAttributeType;
 }
 
-export interface ShipLevel extends BaseAttribute<ShipAttributeType> {
+export interface ShipLevel extends BaseAttribute<ShipLevelType> {
     min: number;
     max: number;
 }

@@ -133,15 +133,29 @@ function deriveMainAttributes(shipLevels, previous) {
     var result = [];
     var add = function (attribute) {
         var _a;
-        return result.push(__assign(__assign({}, attribute), { delta: buildDelta(attribute.value - ((_a = previous === null || previous === void 0 ? void 0 : previous[result.length].value) !== null && _a !== void 0 ? _a : attribute.value)), shortLabel: attribute.label.substr(0, 3).toUpperCase() }));
+        var value = Math.floor(attribute.value);
+        result.push(__assign(__assign({}, attribute), { value: value, delta: buildDelta(value - ((_a = previous === null || previous === void 0 ? void 0 : previous[result.length].value) !== null && _a !== void 0 ? _a : value)), shortLabel: attribute.label.substr(0, 3).toUpperCase() }));
     };
-    add({ type: "strength", label: "Strength", value: 10 });
-    add({ type: "dexterity", label: "Dexterity", value: 10 });
-    add({ type: "constitution", label: "Constitution", value: 10 });
+    add({ type: "strength", label: "Strength", value: 10 + shipLevels.hull + (shipLevels.smallWeaponSlots + shipLevels.cargo) * 0.25 });
+    add({ type: "dexterity", label: "Dexterity", value: 10 + shipLevels.sails + shipLevels.voidCoreStrength - shipLevels.cargo * 0.5 - shipLevels.hull * 0.5 });
+    add({ type: "constitution", label: "Constitution", value: 10 + shipLevels.hull * 0.5 + shipLevels.voidCoreEfficiency * 2.0 - shipLevels.creatureCapacity });
     add({ type: "intelligence", label: "Intelligence", value: 0 });
     add({ type: "wisdom", label: "Wisdom", value: 0 });
     add({ type: "charisma", label: "Charisma", value: 0 });
     return result;
+}
+function asShipLevelLookup(shipLevels) {
+    var lookup = function (type) { return shipLevels.filter(function (level) { return level.type === type; })[0].value; };
+    return {
+        cargo: lookup("cargo"),
+        chambers: lookup("chambers"),
+        creatureCapacity: lookup("creatureCapacity"),
+        hull: lookup("hull"),
+        sails: lookup("sails"),
+        smallWeaponSlots: lookup("smallWeaponSlots"),
+        voidCoreEfficiency: lookup("voidCoreEfficiency"),
+        voidCoreStrength: lookup("voidCoreStrength")
+    };
 }
 function buildDelta(delta) {
     return Math.abs(delta) > 0 ? { isPositive: delta > 0, value: delta } : undefined;
@@ -166,8 +180,8 @@ function showDialog() {
         { type: "smallWeaponSlots", label: "Weapon Slots (small)", min: 0, max: 2, value: 0 },
         { type: "chambers", label: "Chambers", min: 0, max: 4, value: 0 }
     ];
-    var mainAttributes = deriveMainAttributes(levels);
-    var derived = deriveAttributes(levels);
+    var mainAttributes = deriveMainAttributes(asShipLevelLookup(levels));
+    var derived = deriveAttributes(asShipLevelLookup(levels));
     var initialLevels = cloneArray(levels);
     var initialMainAttributes = cloneArray(mainAttributes);
     var initialDerived = cloneArray(derived);
@@ -201,8 +215,8 @@ function showDialog() {
                     level.value = parseInt(slider.value);
                     var delta = level.value - initialLevels[index].value;
                     level.delta = buildDelta(delta);
-                    data.mainAttributes = deriveMainAttributes(levels, initialMainAttributes);
-                    data.derived = deriveAttributes(levels, initialDerived);
+                    data.mainAttributes = deriveMainAttributes(asShipLevelLookup(levels), initialMainAttributes);
+                    data.derived = deriveAttributes(asShipLevelLookup(levels), initialDerived);
                     updateOutputTables(dialogContentRoot, data);
                 });
             });
@@ -1841,7 +1855,7 @@ module.exports = function (delta) {
     return "<span style='color:" 
         + color 
         + "'>("
-        + (delta.isPositive ? "+" : "-")
+        + (delta.isPositive ? "+" : "")
         + (delta ? delta.value : 0)
         + ")</span>";
 };
@@ -1864,19 +1878,25 @@ module.exports = (Handlebars["default"] || Handlebars).template({"1":function(co
     + container.escapeExpression(container.lambda((depth0 != null ? lookupProperty(depth0,"shortLabel") : depth0), depth0))
     + "</th>\r\n";
 },"3":function(container,depth0,helpers,partials,data) {
-    var stack1, lookupProperty = container.lookupProperty || function(parent, propertyName) {
+    var stack1, alias1=depth0 != null ? depth0 : (container.nullContext || {}), lookupProperty = container.lookupProperty || function(parent, propertyName) {
         if (Object.prototype.hasOwnProperty.call(parent, propertyName)) {
           return parent[propertyName];
         }
         return undefined
     };
 
-  return "    <td>"
+  return "    <td style=\"font-weight: "
+    + ((stack1 = lookupProperty(helpers,"if").call(alias1,(depth0 != null ? lookupProperty(depth0,"delta") : depth0),{"name":"if","hash":{},"fn":container.program(4, data, 0),"inverse":container.program(6, data, 0),"data":data,"loc":{"start":{"line":8,"column":28},"end":{"line":8,"column":66}}})) != null ? stack1 : "")
+    + ";\" >"
     + container.escapeExpression(container.lambda((depth0 != null ? lookupProperty(depth0,"value") : depth0), depth0))
     + " "
-    + ((stack1 = __default(__webpack_require__(26)).call(depth0 != null ? depth0 : (container.nullContext || {}),(depth0 != null ? lookupProperty(depth0,"delta") : depth0),{"name":"delta","hash":{},"fn":container.program(4, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":8,"column":18},"end":{"line":8,"column":44}}})) != null ? stack1 : "")
+    + ((stack1 = __default(__webpack_require__(26)).call(alias1,(depth0 != null ? lookupProperty(depth0,"delta") : depth0),{"name":"delta","hash":{},"fn":container.program(8, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":8,"column":80},"end":{"line":8,"column":106}}})) != null ? stack1 : "")
     + "</td>\r\n";
 },"4":function(container,depth0,helpers,partials,data) {
+    return "bold";
+},"6":function(container,depth0,helpers,partials,data) {
+    return "normal";
+},"8":function(container,depth0,helpers,partials,data) {
     return "";
 },"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
     var stack1, alias1=depth0 != null ? depth0 : (container.nullContext || {}), lookupProperty = container.lookupProperty || function(parent, propertyName) {

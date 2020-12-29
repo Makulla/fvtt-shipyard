@@ -5,6 +5,6 @@
 </tr>
 <tr>
     {{#each mainAttributes}}
-    <td>{{value}} {{#delta delta}}{{/delta}}</td>
+    <td style="font-weight: {{#if delta}}bold{{else}}normal{{/if}};" >{{value}} {{#delta delta}}{{/delta}}</td>
     {{/each}}
 </tr>
