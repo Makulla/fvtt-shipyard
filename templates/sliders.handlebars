@@ -1,4 +1,15 @@
-<div>Cargo</div>
-<input type="range" value={{cargo.value}} id={{cargo.id}} min={{cargo.min}} max={{cargo.max}} step="1">
-<hr>
-<table id={{outputTableId}}></table>
+<div style="display: flex; flex-direction: row; justify-content: space-around; align-items: start;">
+    <div style="width: 350px;">
+        <h1>Ship Levels</h1>
+        {{#each levels}}
+        <div><strong>{{label}}</strong> ({{min}} to {{max}})</div>
+        <input type="range" value={{value}} id=boatyFace{{type}}Slider min={{min}} max={{max}} step="1">
+        {{/each}}
+    </div>
+
+    <div style="width: 350px;">
+        <h1>Effects</h1>
+        <table id={{mainAttributeTableId}}></table>
+        <table id={{outputTableId}}></table>
+    </div>
+</div>

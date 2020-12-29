@@ -94,36 +94,124 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _templates_sliders_handlebars__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_templates_sliders_handlebars__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _templates_table_handlebars__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(25);
 /* harmony import */ var _templates_table_handlebars__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_templates_table_handlebars__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _templates_mainAttributes_handlebars__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(27);
+/* harmony import */ var _templates_mainAttributes_handlebars__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_templates_mainAttributes_handlebars__WEBPACK_IMPORTED_MODULE_2__);
+var __assign = (undefined && undefined.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 
 
+
+function deriveAttributes(shipLevels, previous) {
+    var result = [];
+    var add = function (attribute) {
+        var _a;
+        return result.push(__assign(__assign({}, attribute), { delta: buildDelta(attribute.value - ((_a = previous === null || previous === void 0 ? void 0 : previous[result.length].value) !== null && _a !== void 0 ? _a : attribute.value)) }));
+    };
+    add({ type: "armorClass", label: "Armor Class", value: 10 });
+    add({ type: "hitPoints", label: "Hit Points", value: 200 });
+    add({ type: "length", label: "Length (ft)", value: 100 });
+    add({ type: "width", label: "Width (ft)", value: 20 });
+    add({ type: "mass", label: "Mass (tons)", value: 100 });
+    add({ type: "cargoHold", label: "Cargo Hold (tons)", value: 1 });
+    add({ type: "masts", label: "Masts", value: 1 });
+    add({ type: "minimumCrew", label: "Minimum Crew", value: 3 });
+    add({ type: "fuelConsumption", label: "Fuel Consumption (GP / mile)", value: 1 });
+    add({ type: "travelPace", label: "Travel Pace (miles / hour)", value: 100 });
+    add({ type: "maximumTravelHeight", label: "Maximum Travel Height (ft)", value: 150 });
+    return result;
+}
+function deriveMainAttributes(shipLevels, previous) {
+    var result = [];
+    var add = function (attribute) {
+        var _a;
+        return result.push(__assign(__assign({}, attribute), { delta: buildDelta(attribute.value - ((_a = previous === null || previous === void 0 ? void 0 : previous[result.length].value) !== null && _a !== void 0 ? _a : attribute.value)), shortLabel: attribute.label.substr(0, 3).toUpperCase() }));
+    };
+    add({ type: "strength", label: "Strength", value: 10 });
+    add({ type: "dexterity", label: "Dexterity", value: 10 });
+    add({ type: "constitution", label: "Constitution", value: 10 });
+    add({ type: "intelligence", label: "Intelligence", value: 0 });
+    add({ type: "wisdom", label: "Wisdom", value: 0 });
+    add({ type: "charisma", label: "Charisma", value: 0 });
+    return result;
+}
+function buildDelta(delta) {
+    return Math.abs(delta) > 0 ? { isPositive: delta > 0, value: delta } : undefined;
+}
+function updateOutputTables(dialogContentRoot, data) {
+    var derivedTable = dialogContentRoot.querySelector("#" + data.outputTableId);
+    derivedTable.innerHTML = _templates_table_handlebars__WEBPACK_IMPORTED_MODULE_1___default()(data);
+    var mainAttributesTable = dialogContentRoot.querySelector("#" + data.mainAttributeTableId);
+    mainAttributesTable.innerHTML = _templates_mainAttributes_handlebars__WEBPACK_IMPORTED_MODULE_2___default()(data);
+}
+function cloneArray(array) {
+    return JSON.parse(JSON.stringify(array));
+}
 function showDialog() {
-    var cargoSliderId = "boatyfaceCargoSlider";
-    var outputTableId = "boatyfaceOutputTableId";
-    var data = { outputTableId: outputTableId, cargo: { min: 1, max: 5, value: 3, id: cargoSliderId } };
+    var levels = [
+        { type: "cargo", label: "Cargo", min: 1, max: 5, value: 1 },
+        { type: "hull", label: "Hull", min: 1, max: 5, value: 1 },
+        { type: "sails", label: "Sails", min: 1, max: 5, value: 1 },
+        { type: "creatureCapacity", label: "Creature Capacity", min: 1, max: 5, value: 1 },
+        { type: "voidCoreEfficiency", label: "Void Core Efficiency", min: 1, max: 3, value: 1 },
+        { type: "voidCoreStrength", label: "Void Core Strength", min: 1, max: 3, value: 1 },
+        { type: "smallWeaponSlots", label: "Weapon Slots (small)", min: 0, max: 2, value: 0 },
+        { type: "chambers", label: "Chambers", min: 0, max: 4, value: 0 }
+    ];
+    var mainAttributes = deriveMainAttributes(levels);
+    var derived = deriveAttributes(levels);
+    var initialLevels = cloneArray(levels);
+    var initialMainAttributes = cloneArray(mainAttributes);
+    var initialDerived = cloneArray(derived);
+    var data = {
+        outputTableId: "boatyfaceOutputTableId",
+        mainAttributeTableId: "boatyfaceMainAttributeTableId",
+        levels: levels,
+        mainAttributes: mainAttributes,
+        derived: derived
+    };
     var d = new Dialog({
-        title: "Boatyface",
-        content: _templates_sliders_handlebars__WEBPACK_IMPORTED_MODULE_0___default()(data) + _templates_table_handlebars__WEBPACK_IMPORTED_MODULE_1___default()(data),
+        title: "Ship",
+        content: _templates_sliders_handlebars__WEBPACK_IMPORTED_MODULE_0___default()(data),
         buttons: {
-            ok: {
+            tell: {
                 icon: '<i class="fas fa-check"></i>',
-                label: "OK",
+                label: "To Chat",
+                callback: function () { }
+            },
+            close: {
+                icon: '<i class="fas fa-check"></i>',
+                label: "Close",
                 callback: function () { }
             }
         },
-        default: "ok",
-        render: function (html) {
-            var table = html.querySelector("#" + outputTableId);
-            var slider = html.querySelector("#" + cargoSliderId);
-            table.innerHTML = _templates_table_handlebars__WEBPACK_IMPORTED_MODULE_1___default()(data);
-            slider.addEventListener("change", function () {
-                data.cargo.value = slider.value;
-                data.cargo.delta = data.cargo.value - slider.value;
-                table.innerHTML = _templates_table_handlebars__WEBPACK_IMPORTED_MODULE_1___default()(data);
+        default: "close",
+        render: function (dialogContentRoot) {
+            levels.forEach(function (level, index) {
+                var slider = dialogContentRoot.querySelector("#boatyFace" + level.type + "Slider");
+                slider.addEventListener("change", function () {
+                    level.value = parseInt(slider.value);
+                    var delta = level.value - initialLevels[index].value;
+                    level.delta = buildDelta(delta);
+                    data.mainAttributes = deriveMainAttributes(levels, initialMainAttributes);
+                    data.derived = deriveAttributes(levels, initialDerived);
+                    updateOutputTables(dialogContentRoot, data);
+                });
             });
+            updateOutputTables(dialogContentRoot, data);
         },
         close: function (html) { },
     }, {
-        jQuery: false
+        jQuery: false,
+        width: 800
     });
     d.render(true);
 }
@@ -137,25 +225,44 @@ Hooks.on("ready", function () { window["showBoatyface"] = function () { return s
 
 var Handlebars = __webpack_require__(2);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
-module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
-    var stack1, helper, alias1=container.lambda, alias2=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
+module.exports = (Handlebars["default"] || Handlebars).template({"1":function(container,depth0,helpers,partials,data) {
+    var helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
         if (Object.prototype.hasOwnProperty.call(parent, propertyName)) {
           return parent[propertyName];
         }
         return undefined
     };
 
-  return "<div>Cargo</div>\r\n<input type=\"range\" value="
-    + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"cargo") : depth0)) != null ? lookupProperty(stack1,"value") : stack1), depth0))
-    + " id="
-    + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"cargo") : depth0)) != null ? lookupProperty(stack1,"id") : stack1), depth0))
-    + " min="
-    + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"cargo") : depth0)) != null ? lookupProperty(stack1,"min") : stack1), depth0))
+  return "        <div><strong>"
+    + alias4(((helper = (helper = lookupProperty(helpers,"label") || (depth0 != null ? lookupProperty(depth0,"label") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"label","hash":{},"data":data,"loc":{"start":{"line":5,"column":21},"end":{"line":5,"column":30}}}) : helper)))
+    + "</strong> ("
+    + alias4(((helper = (helper = lookupProperty(helpers,"min") || (depth0 != null ? lookupProperty(depth0,"min") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"min","hash":{},"data":data,"loc":{"start":{"line":5,"column":41},"end":{"line":5,"column":48}}}) : helper)))
+    + " to "
+    + alias4(((helper = (helper = lookupProperty(helpers,"max") || (depth0 != null ? lookupProperty(depth0,"max") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"max","hash":{},"data":data,"loc":{"start":{"line":5,"column":52},"end":{"line":5,"column":59}}}) : helper)))
+    + ")</div>\r\n        <input type=\"range\" value="
+    + alias4(((helper = (helper = lookupProperty(helpers,"value") || (depth0 != null ? lookupProperty(depth0,"value") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"value","hash":{},"data":data,"loc":{"start":{"line":6,"column":34},"end":{"line":6,"column":43}}}) : helper)))
+    + " id=boatyFace"
+    + alias4(((helper = (helper = lookupProperty(helpers,"type") || (depth0 != null ? lookupProperty(depth0,"type") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"type","hash":{},"data":data,"loc":{"start":{"line":6,"column":56},"end":{"line":6,"column":64}}}) : helper)))
+    + "Slider min="
+    + alias4(((helper = (helper = lookupProperty(helpers,"min") || (depth0 != null ? lookupProperty(depth0,"min") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"min","hash":{},"data":data,"loc":{"start":{"line":6,"column":75},"end":{"line":6,"column":82}}}) : helper)))
     + " max="
-    + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"cargo") : depth0)) != null ? lookupProperty(stack1,"max") : stack1), depth0))
-    + " step=\"1\">\r\n<hr>\r\n<table id="
-    + alias2(((helper = (helper = lookupProperty(helpers,"outputTableId") || (depth0 != null ? lookupProperty(depth0,"outputTableId") : depth0)) != null ? helper : container.hooks.helperMissing),(typeof helper === "function" ? helper.call(depth0 != null ? depth0 : (container.nullContext || {}),{"name":"outputTableId","hash":{},"data":data,"loc":{"start":{"line":4,"column":10},"end":{"line":4,"column":27}}}) : helper)))
-    + "></table>";
+    + alias4(((helper = (helper = lookupProperty(helpers,"max") || (depth0 != null ? lookupProperty(depth0,"max") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"max","hash":{},"data":data,"loc":{"start":{"line":6,"column":87},"end":{"line":6,"column":94}}}) : helper)))
+    + " step=\"1\">\r\n";
+},"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
+        if (Object.prototype.hasOwnProperty.call(parent, propertyName)) {
+          return parent[propertyName];
+        }
+        return undefined
+    };
+
+  return "<div style=\"display: flex; flex-direction: row; justify-content: space-around; align-items: start;\">\r\n    <div style=\"width: 350px;\">\r\n        <h1>Ship Levels</h1>\r\n"
+    + ((stack1 = lookupProperty(helpers,"each").call(alias1,(depth0 != null ? lookupProperty(depth0,"levels") : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":4,"column":8},"end":{"line":7,"column":17}}})) != null ? stack1 : "")
+    + "    </div>\r\n\r\n    <div style=\"width: 350px;\">\r\n        <h1>Effects</h1>\r\n        <table id="
+    + alias4(((helper = (helper = lookupProperty(helpers,"mainAttributeTableId") || (depth0 != null ? lookupProperty(depth0,"mainAttributeTableId") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"mainAttributeTableId","hash":{},"data":data,"loc":{"start":{"line":12,"column":18},"end":{"line":12,"column":42}}}) : helper)))
+    + "></table>\r\n        <table id="
+    + alias4(((helper = (helper = lookupProperty(helpers,"outputTableId") || (depth0 != null ? lookupProperty(depth0,"outputTableId") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"outputTableId","hash":{},"data":data,"loc":{"start":{"line":13,"column":18},"end":{"line":13,"column":35}}}) : helper)))
+    + "></table>\r\n    </div>\r\n</div>";
 },"useData":true});
 
 /***/ }),
@@ -1685,19 +1792,105 @@ module.exports = exports['default'];
 
 var Handlebars = __webpack_require__(2);
 function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
-module.exports = (Handlebars["default"] || Handlebars).template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
-    var stack1, alias1=container.lambda, alias2=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
+module.exports = (Handlebars["default"] || Handlebars).template({"1":function(container,depth0,helpers,partials,data) {
+    var stack1, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.lambda, alias3=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
         if (Object.prototype.hasOwnProperty.call(parent, propertyName)) {
           return parent[propertyName];
         }
         return undefined
     };
 
-  return "<tr>\r\n    <td>Cargo</td>\r\n    <td>"
-    + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"cargo") : depth0)) != null ? lookupProperty(stack1,"value") : stack1), depth0))
+  return "<tr style=\"font-weight: "
+    + ((stack1 = lookupProperty(helpers,"if").call(alias1,(depth0 != null ? lookupProperty(depth0,"delta") : depth0),{"name":"if","hash":{},"fn":container.program(2, data, 0),"inverse":container.program(4, data, 0),"data":data,"loc":{"start":{"line":6,"column":24},"end":{"line":6,"column":62}}})) != null ? stack1 : "")
+    + ";\">\r\n    <td>"
+    + alias3(alias2((depth0 != null ? lookupProperty(depth0,"label") : depth0), depth0))
+    + "</td>\r\n    <td>"
+    + alias3(alias2((depth0 != null ? lookupProperty(depth0,"value") : depth0), depth0))
     + " "
-    + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"cargo") : depth0)) != null ? lookupProperty(stack1,"delta") : stack1), depth0))
-    + "</td>\r\n</tr>";
+    + ((stack1 = __default(__webpack_require__(26)).call(alias1,(depth0 != null ? lookupProperty(depth0,"delta") : depth0),{"name":"delta","hash":{},"fn":container.program(6, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":8,"column":18},"end":{"line":8,"column":44}}})) != null ? stack1 : "")
+    + "</td>\r\n</tr>\r\n";
+},"2":function(container,depth0,helpers,partials,data) {
+    return "bold";
+},"4":function(container,depth0,helpers,partials,data) {
+    return "normal";
+},"6":function(container,depth0,helpers,partials,data) {
+    return "";
+},"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var stack1, alias1=depth0 != null ? depth0 : (container.nullContext || {}), lookupProperty = container.lookupProperty || function(parent, propertyName) {
+        if (Object.prototype.hasOwnProperty.call(parent, propertyName)) {
+          return parent[propertyName];
+        }
+        return undefined
+    };
+
+  return "<tr>\r\n    <td colspan=\"2\" style=\"text-align: center;\">Levels</td>\r\n</tr>\r\n\r\n"
+    + ((stack1 = lookupProperty(helpers,"each").call(alias1,(depth0 != null ? lookupProperty(depth0,"levels") : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":5,"column":0},"end":{"line":10,"column":9}}})) != null ? stack1 : "")
+    + "\r\n\r\n<tr>\r\n    <td colspan=\"2\" style=\"text-align: center;\">Derived Attributes</td>\r\n</tr>\r\n\r\n"
+    + ((stack1 = lookupProperty(helpers,"each").call(alias1,(depth0 != null ? lookupProperty(depth0,"derived") : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":17,"column":0},"end":{"line":22,"column":9}}})) != null ? stack1 : "");
+},"useData":true});
+
+/***/ }),
+/* 26 */
+/***/ (function(module, exports) {
+
+module.exports = function (delta) {
+    if(!delta) return "";
+
+    const color = delta.isPositive ? "green" : "red";
+
+    return "<span style='color:" 
+        + color 
+        + "'>("
+        + (delta.isPositive ? "+" : "-")
+        + (delta ? delta.value : 0)
+        + ")</span>";
+};
+
+/***/ }),
+/* 27 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var Handlebars = __webpack_require__(2);
+function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
+module.exports = (Handlebars["default"] || Handlebars).template({"1":function(container,depth0,helpers,partials,data) {
+    var lookupProperty = container.lookupProperty || function(parent, propertyName) {
+        if (Object.prototype.hasOwnProperty.call(parent, propertyName)) {
+          return parent[propertyName];
+        }
+        return undefined
+    };
+
+  return "    <th>"
+    + container.escapeExpression(container.lambda((depth0 != null ? lookupProperty(depth0,"shortLabel") : depth0), depth0))
+    + "</th>\r\n";
+},"3":function(container,depth0,helpers,partials,data) {
+    var stack1, lookupProperty = container.lookupProperty || function(parent, propertyName) {
+        if (Object.prototype.hasOwnProperty.call(parent, propertyName)) {
+          return parent[propertyName];
+        }
+        return undefined
+    };
+
+  return "    <td>"
+    + container.escapeExpression(container.lambda((depth0 != null ? lookupProperty(depth0,"value") : depth0), depth0))
+    + " "
+    + ((stack1 = __default(__webpack_require__(26)).call(depth0 != null ? depth0 : (container.nullContext || {}),(depth0 != null ? lookupProperty(depth0,"delta") : depth0),{"name":"delta","hash":{},"fn":container.program(4, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":8,"column":18},"end":{"line":8,"column":44}}})) != null ? stack1 : "")
+    + "</td>\r\n";
+},"4":function(container,depth0,helpers,partials,data) {
+    return "";
+},"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var stack1, alias1=depth0 != null ? depth0 : (container.nullContext || {}), lookupProperty = container.lookupProperty || function(parent, propertyName) {
+        if (Object.prototype.hasOwnProperty.call(parent, propertyName)) {
+          return parent[propertyName];
+        }
+        return undefined
+    };
+
+  return "<tr>\r\n"
+    + ((stack1 = lookupProperty(helpers,"each").call(alias1,(depth0 != null ? lookupProperty(depth0,"mainAttributes") : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":2,"column":4},"end":{"line":4,"column":13}}})) != null ? stack1 : "")
+    + "</tr>\r\n<tr>\r\n"
+    + ((stack1 = lookupProperty(helpers,"each").call(alias1,(depth0 != null ? lookupProperty(depth0,"mainAttributes") : depth0),{"name":"each","hash":{},"fn":container.program(3, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":7,"column":4},"end":{"line":9,"column":13}}})) != null ? stack1 : "")
+    + "</tr>";
 },"useData":true});
 
 /***/ })

@@ -1,4 +1,22 @@
 <tr>
-    <td>Cargo</td>
-    <td>{{cargo.value}} {{cargo.delta}}</td>
+    <td colspan="2" style="text-align: center;">Levels</td>
 </tr>
+
+{{#each levels}}
+<tr style="font-weight: {{#if delta}}bold{{else}}normal{{/if}};">
+    <td>{{label}}</td>
+    <td>{{value}} {{#delta delta}}{{/delta}}</td>
+</tr>
+{{/each}}
+
+
+<tr>
+    <td colspan="2" style="text-align: center;">Derived Attributes</td>
+</tr>
+
+{{#each derived}}
+<tr style="font-weight: {{#if delta}}bold{{else}}normal{{/if}};">
+    <td>{{label}}</td>
+    <td>{{value}} {{#delta delta}}{{/delta}}</td>
+</tr>
+{{/each}}

@@ -4,6 +4,7 @@ declare const Hooks: {
 
 declare interface DialogConfig {
     jQuery: boolean;
+    width: number;
 }
 
 declare interface DialogButton {

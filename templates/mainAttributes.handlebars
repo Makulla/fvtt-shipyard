@@ -1,0 +1,10 @@
+<tr>
+    {{#each mainAttributes}}
+    <th>{{shortLabel}}</th>
+    {{/each}}
+</tr>
+<tr>
+    {{#each mainAttributes}}
+    <td>{{value}} {{#delta delta}}{{/delta}}</td>
+    {{/each}}
+</tr>
