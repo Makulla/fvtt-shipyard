@@ -2,6 +2,23 @@ declare const Hooks: {
     on(hook: "init" | "ready", handler: () => void): void;
 }
 
+declare interface Actor {
+    update(data: { data: any }): void;
+    readonly data: any;
+}
+
+declare const ui: {
+    notifications: {
+        error(message: string): void;
+    }
+}
+
+declare const game: {
+    actors: {
+        find(predicate: (actor: { name: string }) => boolean): Actor | null;
+    }
+}
+
 declare interface DialogConfig {
     jQuery: boolean;
     width: number;
@@ -20,6 +37,20 @@ declare interface DialogData {
     default: string,
     render: (root: HTMLElement) => void,
     close: (root: HTMLElement) => void,
+}
+
+declare interface ChatMessageData {
+    content: string;
+    whisper?: User[];
+}
+
+declare interface User {
+
+}
+
+declare class ChatMessage {
+    static create(data: ChatMessageData): Promise<void>;
+    static getWhisperRecipients(userName: string): User[]; 
 }
 
 declare class Dialog {

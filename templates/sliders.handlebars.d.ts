@@ -14,15 +14,17 @@ export type DerivedAttributeType =
     | "cargoHold"
     | "travelPace"
     | "hitPoints"
-    | "minimumCrew"
+    | "crew"
+    | "passengers"
     | "armorClass"
     | "width"
     | "length"
     | "masts"
-    | "maximumTravelHeight";
+    | "maximumTravelHeight"
+    | "crewUpkeep";
 
 
-export type MainAttributeType =
+export type AbilityType =
       "strength"
     | "dexterity"
     | "constitution"
@@ -48,17 +50,19 @@ export interface ShipLevel extends BaseAttribute<ShipLevelType> {
 }
 
 export interface DerivedAttribute extends BaseAttribute<DerivedAttributeType> { }
-export interface MainAttribute extends BaseAttribute<MainAttributeType> {
+export interface Ability extends BaseAttribute<AbilityType> {
     shortLabel: string;
 }
 
 export interface DialogData {
     levels: ShipLevel[];
-    mainAttributes: MainAttribute[];
+    mainAttributes: Ability[];
     derived: DerivedAttribute[];
 
     outputTableId: string;
     mainAttributeTableId: string;
+    sendToChatId: string;
+    sendToGmId: string;
 }
 
 declare let sliderTemplate: (data: DialogData) => string;

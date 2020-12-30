@@ -112,24 +112,38 @@ var __assign = (undefined && undefined.__assign) || function () {
 
 function deriveAttributes(shipLevels, previous) {
     var result = [];
+    var roundDecimal = function (num) { return parseFloat(num.toFixed(2)); };
     var add = function (attribute) {
         var _a;
-        return result.push(__assign(__assign({}, attribute), { delta: buildDelta(attribute.value - ((_a = previous === null || previous === void 0 ? void 0 : previous[result.length].value) !== null && _a !== void 0 ? _a : attribute.value)) }));
+        return result.push(__assign(__assign({}, attribute), { delta: buildDelta(roundDecimal(attribute.value - ((_a = previous === null || previous === void 0 ? void 0 : previous[result.length].value) !== null && _a !== void 0 ? _a : attribute.value))) }));
     };
-    add({ type: "armorClass", label: "Armor Class", value: 10 });
-    add({ type: "hitPoints", label: "Hit Points", value: 200 });
+    var masts = Math.ceil(shipLevels.sails * 0.5);
+    var hitPoints = Math.floor(shipLevels.hull * 50 + shipLevels.cargo * 15 + shipLevels.chambers * 15);
+    var cargoHold = roundDecimal(0.5 + Math.pow((shipLevels.cargo - 1), 2) * 0.8);
+    var passengers = Math.floor(Math.pow(shipLevels.creatureCapacity, 2) * 2);
+    var crew = Math.max(0, Math.ceil(1 + shipLevels.sails * 2 + hitPoints * 0.1 + passengers * 0.25 + shipLevels.smallWeaponSlots * 3) - 3);
+    var mass = roundDecimal(cargoHold * 1.2 + hitPoints * 0.1 + shipLevels.sails * 0.01 + masts * 5 + passengers * 0.35 + crew * 0.2 + shipLevels.smallWeaponSlots * 2.0);
+    var maximumTravelHeight = roundDecimal(150 + Math.pow((shipLevels.voidCoreStrength - 1), 2) * 100 - 50 * Math.log(0.25 * mass));
+    var sailPropulsion = 1 + shipLevels.sails * 4 - Math.pow(shipLevels.sails, (1.55));
+    var travelPaceHour = roundDecimal(sailPropulsion - mass * 0.1);
+    var fuelConsumption = roundDecimal(((Math.pow(10, (travelPaceHour * 0.3)) + Math.pow(mass, 1.5)) * Math.pow(1.5, (shipLevels.voidCoreStrength - 1))) / (Math.pow(shipLevels.voidCoreEfficiency, 0.75)));
+    var crewUpkeep = roundDecimal(crew * 0.75);
+    add({ type: "armorClass", label: "Armor Class", value: 9 + shipLevels.hull });
+    add({ type: "hitPoints", label: "Hit Points", value: hitPoints });
     add({ type: "length", label: "Length (ft)", value: 100 });
     add({ type: "width", label: "Width (ft)", value: 20 });
-    add({ type: "mass", label: "Mass (tons)", value: 100 });
-    add({ type: "cargoHold", label: "Cargo Hold (tons)", value: 1 });
-    add({ type: "masts", label: "Masts", value: 1 });
-    add({ type: "minimumCrew", label: "Minimum Crew", value: 3 });
-    add({ type: "fuelConsumption", label: "Fuel Consumption (GP / mile)", value: 1 });
-    add({ type: "travelPace", label: "Travel Pace (miles / hour)", value: 100 });
-    add({ type: "maximumTravelHeight", label: "Maximum Travel Height (ft)", value: 150 });
+    add({ type: "mass", label: "Mass (tons)", value: mass });
+    add({ type: "cargoHold", label: "Cargo Hold (tons)", value: cargoHold });
+    add({ type: "masts", label: "Masts", value: masts });
+    add({ type: "passengers", label: "Passengers", value: passengers });
+    add({ type: "crew", label: "Crew", value: crew });
+    add({ type: "fuelConsumption", label: "Fuel Consumption (GP / 100 miles)", value: fuelConsumption });
+    add({ type: "travelPace", label: "Travel Pace (miles / day)", value: roundDecimal(travelPaceHour * 24) });
+    add({ type: "maximumTravelHeight", label: "Maximum Travel Height (ft)", value: maximumTravelHeight });
+    add({ type: "crewUpkeep", label: "Crew Upkeep (GP / Day)", value: crewUpkeep });
     return result;
 }
-function deriveMainAttributes(shipLevels, previous) {
+function deriveAbilities(shipLevels, previous) {
     var result = [];
     var add = function (attribute) {
         var _a;
@@ -169,8 +183,90 @@ function updateOutputTables(dialogContentRoot, data) {
 function cloneArray(array) {
     return JSON.parse(JSON.stringify(array));
 }
-function showDialog() {
-    var levels = [
+function cloneAndRemoveDelta(array) {
+    var clone = cloneArray(array);
+    clone.forEach(function (c) { return c.delta = undefined; });
+    return clone;
+}
+function showDialog(actorName) {
+    var levels = getLevelsFromActorOrDefault(actorName);
+    var mainAttributes = deriveAbilities(asShipLevelLookup(levels));
+    var derived = deriveAttributes(asShipLevelLookup(levels));
+    var initialLevels = cloneArray(levels);
+    var initialMainAttributes = cloneArray(mainAttributes);
+    var initialDerived = cloneArray(derived);
+    var data = {
+        outputTableId: "boatyfaceOutputTable",
+        mainAttributeTableId: "boatyfaceMainAttributeTable",
+        levels: levels,
+        mainAttributes: mainAttributes,
+        sendToChatId: "boatyfaceSendToChat",
+        sendToGmId: "boatyfaceSendToGm",
+        derived: derived
+    };
+    var disposeListeners = [];
+    var d = new Dialog({
+        title: "Shipyard",
+        content: _templates_sliders_handlebars__WEBPACK_IMPORTED_MODULE_0___default()(data),
+        buttons: {
+            close: {
+                icon: '<i class="fas fa-check"></i>',
+                label: "Close",
+                callback: function () { }
+            }
+        },
+        default: "close",
+        render: function (dialogContentRoot) {
+            var addButtonListener = function (domId, handler) {
+                var button = dialogContentRoot.querySelector("#" + domId);
+                var domHandler = function () { return handler(); };
+                button.addEventListener("click", domHandler);
+                disposeListeners.push(function () { return button.removeEventListener("click", domHandler); });
+            };
+            addButtonListener(data.sendToChatId, function () { return ChatMessage.create({ content: "<table>" + _templates_table_handlebars__WEBPACK_IMPORTED_MODULE_1___default()(data) + "</table>" }); });
+            addButtonListener(data.sendToGmId, function () { return ChatMessage.create({
+                content: "<table>" + _templates_table_handlebars__WEBPACK_IMPORTED_MODULE_1___default()(data) + "</table><hr><div style=\"user-select: all;\">" + JSON.stringify(cloneAndRemoveDelta(levels), undefined, 3) + "</div>",
+                whisper: ChatMessage.getWhisperRecipients("gm")
+            }); });
+            levels.forEach(function (level, index) {
+                var slider = dialogContentRoot.querySelector("#boatyFace" + level.type + "Slider");
+                var listener = function () {
+                    level.value = parseInt(slider.value);
+                    var delta = level.value - initialLevels[index].value;
+                    level.delta = buildDelta(delta);
+                    data.mainAttributes = deriveAbilities(asShipLevelLookup(levels), initialMainAttributes);
+                    data.derived = deriveAttributes(asShipLevelLookup(levels), initialDerived);
+                    updateOutputTables(dialogContentRoot, data);
+                };
+                slider.addEventListener("change", listener);
+                disposeListeners.push(function () { return slider.removeEventListener("change", listener); });
+            });
+            updateOutputTables(dialogContentRoot, data);
+        },
+        close: function () { return disposeListeners.forEach(function (dispose) { return dispose(); }); },
+    }, {
+        jQuery: false,
+        width: 800
+    });
+    d.render(true);
+}
+function getLevelsFromActorOrDefault(actorName) {
+    var actor = game.actors.find(function (a) { return a.name === actorName; });
+    if (actor === null) {
+        ui.notifications.error("Shipyard: Unknown actor " + actorName);
+    }
+    else {
+        try {
+            var levels = JSON.parse(actor.data.data.details.biography.value);
+            if (levels.length > 0) {
+                return levels;
+            }
+        }
+        catch (error) {
+            ui.notifications.error("Shipyard error: " + error);
+        }
+    }
+    return [
         { type: "cargo", label: "Cargo", min: 1, max: 5, value: 1 },
         { type: "hull", label: "Hull", min: 1, max: 5, value: 1 },
         { type: "sails", label: "Sails", min: 1, max: 5, value: 1 },
@@ -180,57 +276,48 @@ function showDialog() {
         { type: "smallWeaponSlots", label: "Weapon Slots (small)", min: 0, max: 2, value: 0 },
         { type: "chambers", label: "Chambers", min: 0, max: 4, value: 0 }
     ];
-    var mainAttributes = deriveMainAttributes(asShipLevelLookup(levels));
-    var derived = deriveAttributes(asShipLevelLookup(levels));
-    var initialLevels = cloneArray(levels);
-    var initialMainAttributes = cloneArray(mainAttributes);
-    var initialDerived = cloneArray(derived);
-    var data = {
-        outputTableId: "boatyfaceOutputTableId",
-        mainAttributeTableId: "boatyfaceMainAttributeTableId",
-        levels: levels,
-        mainAttributes: mainAttributes,
-        derived: derived
-    };
-    var d = new Dialog({
-        title: "Ship",
-        content: _templates_sliders_handlebars__WEBPACK_IMPORTED_MODULE_0___default()(data),
-        buttons: {
-            tell: {
-                icon: '<i class="fas fa-check"></i>',
-                label: "To Chat",
-                callback: function () { }
+}
+function updateActor(actorName, levelsJson) {
+    var abilities = deriveAbilities(asShipLevelLookup(levelsJson));
+    var getAbility = function (type) { return abilities.filter(function (attr) { return attr.type === type; })[0].value; };
+    var derivedAttributes = deriveAttributes(asShipLevelLookup(levelsJson));
+    var getAttribute = function (type) { return derivedAttributes.filter(function (attr) { return attr.type === type; })[0].value; };
+    game.actors.find(function (a) { return a.name === actorName; }).update({
+        data: {
+            abilities: {
+                cha: { value: getAbility("charisma") },
+                dex: { value: getAbility("dexterity") },
+                int: { value: getAbility("intelligence") },
+                str: { value: getAbility("strength") },
+                wis: { value: getAbility("wisdom") },
+                con: { value: getAbility("constitution") }
             },
-            close: {
-                icon: '<i class="fas fa-check"></i>',
-                label: "Close",
-                callback: function () { }
+            attributes: {
+                ac: { value: getAttribute("armorClass") },
+                capacity: {
+                    creature: getAttribute("crew") + " Crew, " + getAttribute("passengers") + " Passengers",
+                    cargo: getAttribute("cargoHold")
+                },
+                hp: {
+                    value: getAttribute("hitPoints"),
+                    min: 0,
+                    max: getAttribute("hitPoints")
+                },
+                speed: getAttribute("travelPace") + " mpd"
+            },
+            details: {
+                biography: {
+                    value: JSON.stringify(levelsJson),
+                }
             }
-        },
-        default: "close",
-        render: function (dialogContentRoot) {
-            levels.forEach(function (level, index) {
-                var slider = dialogContentRoot.querySelector("#boatyFace" + level.type + "Slider");
-                slider.addEventListener("change", function () {
-                    level.value = parseInt(slider.value);
-                    var delta = level.value - initialLevels[index].value;
-                    level.delta = buildDelta(delta);
-                    data.mainAttributes = deriveMainAttributes(asShipLevelLookup(levels), initialMainAttributes);
-                    data.derived = deriveAttributes(asShipLevelLookup(levels), initialDerived);
-                    updateOutputTables(dialogContentRoot, data);
-                });
-            });
-            updateOutputTables(dialogContentRoot, data);
-        },
-        close: function (html) { },
-    }, {
-        jQuery: false,
-        width: 800
+        }
     });
-    d.render(true);
 }
 Hooks.on("init", function () { });
-Hooks.on("ready", function () { window["showBoatyface"] = function () { return showDialog(); }; });
+Hooks.on("ready", function () {
+    window["shipyardShow"] = function (actorName) { return showDialog(actorName); };
+    window["shipyardUpdateActor"] = function (actorName, levelsJson) { return updateActor(actorName, levelsJson); };
+});
 
 
 /***/ }),
@@ -272,10 +359,14 @@ module.exports = (Handlebars["default"] || Handlebars).template({"1":function(co
 
   return "<div style=\"display: flex; flex-direction: row; justify-content: space-around; align-items: start;\">\r\n    <div style=\"width: 350px;\">\r\n        <h1>Ship Levels</h1>\r\n"
     + ((stack1 = lookupProperty(helpers,"each").call(alias1,(depth0 != null ? lookupProperty(depth0,"levels") : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":4,"column":8},"end":{"line":7,"column":17}}})) != null ? stack1 : "")
-    + "    </div>\r\n\r\n    <div style=\"width: 350px;\">\r\n        <h1>Effects</h1>\r\n        <table id="
-    + alias4(((helper = (helper = lookupProperty(helpers,"mainAttributeTableId") || (depth0 != null ? lookupProperty(depth0,"mainAttributeTableId") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"mainAttributeTableId","hash":{},"data":data,"loc":{"start":{"line":12,"column":18},"end":{"line":12,"column":42}}}) : helper)))
+    + "    </div>\r\n\r\n    <div style=\"width: 350px;\">\r\n        <h1>Effects</h1>\r\n        <div style=\"display: flex; flex-direction: row; align-items: center; justify-content: center;\">\r\n            <input id=\""
+    + alias4(((helper = (helper = lookupProperty(helpers,"sendToChatId") || (depth0 != null ? lookupProperty(depth0,"sendToChatId") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"sendToChatId","hash":{},"data":data,"loc":{"start":{"line":13,"column":23},"end":{"line":13,"column":39}}}) : helper)))
+    + "\" style=\"margin-right: 5px;\" type=\"button\" value=\"Send to Chat\">\r\n            <input id=\""
+    + alias4(((helper = (helper = lookupProperty(helpers,"sendToGmId") || (depth0 != null ? lookupProperty(depth0,"sendToGmId") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"sendToGmId","hash":{},"data":data,"loc":{"start":{"line":14,"column":23},"end":{"line":14,"column":37}}}) : helper)))
+    + "\" type=\"button\" value=\"Send to GM\">\r\n        </div>\r\n        <table id="
+    + alias4(((helper = (helper = lookupProperty(helpers,"mainAttributeTableId") || (depth0 != null ? lookupProperty(depth0,"mainAttributeTableId") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"mainAttributeTableId","hash":{},"data":data,"loc":{"start":{"line":16,"column":18},"end":{"line":16,"column":42}}}) : helper)))
     + "></table>\r\n        <table id="
-    + alias4(((helper = (helper = lookupProperty(helpers,"outputTableId") || (depth0 != null ? lookupProperty(depth0,"outputTableId") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"outputTableId","hash":{},"data":data,"loc":{"start":{"line":13,"column":18},"end":{"line":13,"column":35}}}) : helper)))
+    + alias4(((helper = (helper = lookupProperty(helpers,"outputTableId") || (depth0 != null ? lookupProperty(depth0,"outputTableId") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"outputTableId","hash":{},"data":data,"loc":{"start":{"line":17,"column":18},"end":{"line":17,"column":35}}}) : helper)))
     + "></table>\r\n    </div>\r\n</div>";
 },"useData":true});
 
