@@ -1,6 +1,7 @@
 import sliderTemplate, { Delta, DerivedAttribute, DialogData, Ability, AbilityType, ShipLevel, ShipLevelType, DerivedAttributeType } from "../templates/sliders.handlebars";
 import tableTemplate from "../templates/table.handlebars";
 import mainAttributesTemplate from "../templates/mainAttributes.handlebars"
+import chatMessageTemplate from "../templates/chatMessage.handlebars"
 
 type ShipLevelLookup = Record<ShipLevelType, number>;
 
@@ -108,18 +109,12 @@ function cloneAndRemoveDelta(array: readonly ShipLevel[]): ShipLevel[] {
     return clone;
 }
 
-function showDialog(actorName: string) {
-
-    const levels = getLevelsFromActorOrDefault(actorName);
-
+function buildDialogData(levels: ShipLevel[]): DialogData 
+{
     const mainAttributes = deriveAbilities(asShipLevelLookup(levels));
     const derived = deriveAttributes(asShipLevelLookup(levels));
 
-    const initialLevels = cloneArray(levels);
-    const initialMainAttributes = cloneArray(mainAttributes);
-    const initialDerived = cloneArray(derived);
-
-    const data: DialogData = { 
+    return { 
         outputTableId: "boatyfaceOutputTable",
         mainAttributeTableId: "boatyfaceMainAttributeTable",
         levels,
@@ -128,6 +123,15 @@ function showDialog(actorName: string) {
         sendToGmId: "boatyfaceSendToGm",
         derived
     };
+}
+
+function showDialog(actorName: string) {
+
+    const data = buildDialogData(getLevelsFromActorOrDefault(actorName));
+
+    const initialLevels = cloneArray(data.levels);
+    const initialMainAttributes = cloneArray(data.mainAttributes);
+    const initialDerived = cloneArray(data.derived);
 
     const disposeListeners: (() => void)[] = [];
     const d = new Dialog({
@@ -150,13 +154,17 @@ function showDialog(actorName: string) {
                 disposeListeners.push(() => button.removeEventListener("click", domHandler));
             }
 
-            addButtonListener(data.sendToChatId, () => ChatMessage.create({ content: `<table>${tableTemplate(data)}</table>` }));
-            addButtonListener(data.sendToGmId, () => ChatMessage.create({ 
-                content: `<table>${tableTemplate(data)}</table><hr><div style="user-select: all;">${JSON.stringify(cloneAndRemoveDelta(levels), undefined, 3)}</div>`,
-                whisper: ChatMessage.getWhisperRecipients("gm")
+            addButtonListener(data.sendToChatId, () => ChatMessage.create({
+                 content: JSON.stringify({
+                    dialogData: data,
+                    actorName
+                 }),
+                 flags: {
+                    shipyardChatMessage: true
+                 }
             }));
 
-            levels.forEach((level, index) => {
+            data.levels.forEach((level, index) => {
                 const slider = dialogContentRoot.querySelector(`#boatyFace${level.type}Slider`) as HTMLInputElement;
                 const listener = () => 
                 {
@@ -164,8 +172,8 @@ function showDialog(actorName: string) {
                     const delta = level.value - initialLevels[index].value;
                     level.delta = buildDelta(delta);
 
-                    data.mainAttributes = deriveAbilities(asShipLevelLookup(levels), initialMainAttributes);
-                    data.derived = deriveAttributes(asShipLevelLookup(levels), initialDerived);
+                    data.mainAttributes = deriveAbilities(asShipLevelLookup(data.levels), initialMainAttributes);
+                    data.derived = deriveAttributes(asShipLevelLookup(data.levels), initialDerived);
 
                     updateOutputTables(dialogContentRoot, data);
                 }
@@ -260,8 +268,24 @@ function updateActor(actorName: string, levelsJson: ShipLevel[])
     });
 }
 
-Hooks.on("init", () => { });
+Hooks.on("renderChatMessage", (message, messageRoot) => 
+{ 
+    if(message.data.flags.shipyardChatMessage) 
+    {    
+        const inputId = "shipyardChatMessageId";
+        const { dialogData, actorName }: { actorName: string, dialogData: DialogData } = JSON.parse(message.data.content!);
+
+        messageRoot.find(".message-content").html(chatMessageTemplate({ 
+            tableHtml: tableTemplate(dialogData),
+            inputId,
+            mayNotApply: !game.user.isGM
+        }));
+
+        const buttonInput = messageRoot.find(`#${inputId}`);
+        buttonInput.on("click", () => updateActor(actorName, cloneAndRemoveDelta(dialogData.levels)));
+    }
+});
+
 Hooks.on("ready", () => { 
     (<any>window)["shipyardShow"] = (actorName: string) => showDialog(actorName);
-    (<any>window)["shipyardUpdateActor"] = (actorName: string, levelsJson: ShipLevel[]) => updateActor(actorName, levelsJson);
 });

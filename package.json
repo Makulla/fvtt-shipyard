@@ -16,6 +16,7 @@
         "webpack": "4.44.2",
         "webpack-cli": "3.3.12",
         "handlebars-loader": "1.7.1",
-        "handlebars": "4.7.6"
+        "handlebars": "4.7.6",
+        "@types/jquery": "3.3.1"
     }
 }

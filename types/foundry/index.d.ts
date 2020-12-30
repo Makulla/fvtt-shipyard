@@ -1,5 +1,8 @@
+///<reference types="jquery"/>
+
 declare const Hooks: {
     on(hook: "init" | "ready", handler: () => void): void;
+    on(hook: "renderChatMessage", handler: (message: ChatMessage, messageRoot: JQuery) => void): void;
 }
 
 declare interface Actor {
@@ -37,13 +40,16 @@ declare interface DialogData {
     title: string;
     content: string;
     buttons: { [id: string]: DialogButton };
-    default: string,
-    render: (root: HTMLElement) => void,
-    close: (root: HTMLElement) => void,
+    default: string;
+    render: (root: HTMLElement) => void;
+    close: (root: HTMLElement) => void;
 }
 
 declare interface ChatMessageData {
-    content: string;
+    content?: string;
+    flags: { 
+        shipyardChatMessage?: boolean;
+    };
     whisper?: User[];
 }
 
@@ -52,8 +58,11 @@ declare interface User {
 }
 
 declare class ChatMessage {
+    public data: ChatMessageData;
+    public update(data: ChatMessageData): Promise<ChatMessage>;
+
     static create(data: ChatMessageData): Promise<void>;
-    static getWhisperRecipients(userName: string): User[]; 
+    static getWhisperRecipients(userName: string): User[];
 }
 
 declare class Dialog {

@@ -96,6 +96,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _templates_table_handlebars__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_templates_table_handlebars__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _templates_mainAttributes_handlebars__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(27);
 /* harmony import */ var _templates_mainAttributes_handlebars__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_templates_mainAttributes_handlebars__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _templates_chatMessage_handlebars__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(28);
+/* harmony import */ var _templates_chatMessage_handlebars__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_templates_chatMessage_handlebars__WEBPACK_IMPORTED_MODULE_3__);
 var __assign = (undefined && undefined.__assign) || function () {
     __assign = Object.assign || function(t) {
         for (var s, i = 1, n = arguments.length; i < n; i++) {
@@ -107,6 +109,7 @@ var __assign = (undefined && undefined.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
+
 
 
 
@@ -188,14 +191,10 @@ function cloneAndRemoveDelta(array) {
     clone.forEach(function (c) { return c.delta = undefined; });
     return clone;
 }
-function showDialog(actorName) {
-    var levels = getLevelsFromActorOrDefault(actorName);
+function buildDialogData(levels) {
     var mainAttributes = deriveAbilities(asShipLevelLookup(levels));
     var derived = deriveAttributes(asShipLevelLookup(levels));
-    var initialLevels = cloneArray(levels);
-    var initialMainAttributes = cloneArray(mainAttributes);
-    var initialDerived = cloneArray(derived);
-    var data = {
+    return {
         outputTableId: "boatyfaceOutputTable",
         mainAttributeTableId: "boatyfaceMainAttributeTable",
         levels: levels,
@@ -204,6 +203,12 @@ function showDialog(actorName) {
         sendToGmId: "boatyfaceSendToGm",
         derived: derived
     };
+}
+function showDialog(actorName) {
+    var data = buildDialogData(getLevelsFromActorOrDefault(actorName));
+    var initialLevels = cloneArray(data.levels);
+    var initialMainAttributes = cloneArray(data.mainAttributes);
+    var initialDerived = cloneArray(data.derived);
     var disposeListeners = [];
     var d = new Dialog({
         title: "Shipyard",
@@ -223,19 +228,23 @@ function showDialog(actorName) {
                 button.addEventListener("click", domHandler);
                 disposeListeners.push(function () { return button.removeEventListener("click", domHandler); });
             };
-            addButtonListener(data.sendToChatId, function () { return ChatMessage.create({ content: "<table>" + _templates_table_handlebars__WEBPACK_IMPORTED_MODULE_1___default()(data) + "</table>" }); });
-            addButtonListener(data.sendToGmId, function () { return ChatMessage.create({
-                content: "<table>" + _templates_table_handlebars__WEBPACK_IMPORTED_MODULE_1___default()(data) + "</table><hr><div style=\"user-select: all;\">" + JSON.stringify(cloneAndRemoveDelta(levels), undefined, 3) + "</div>",
-                whisper: ChatMessage.getWhisperRecipients("gm")
+            addButtonListener(data.sendToChatId, function () { return ChatMessage.create({
+                content: JSON.stringify({
+                    dialogData: data,
+                    actorName: actorName
+                }),
+                flags: {
+                    shipyardChatMessage: true
+                }
             }); });
-            levels.forEach(function (level, index) {
+            data.levels.forEach(function (level, index) {
                 var slider = dialogContentRoot.querySelector("#boatyFace" + level.type + "Slider");
                 var listener = function () {
                     level.value = parseInt(slider.value);
                     var delta = level.value - initialLevels[index].value;
                     level.delta = buildDelta(delta);
-                    data.mainAttributes = deriveAbilities(asShipLevelLookup(levels), initialMainAttributes);
-                    data.derived = deriveAttributes(asShipLevelLookup(levels), initialDerived);
+                    data.mainAttributes = deriveAbilities(asShipLevelLookup(data.levels), initialMainAttributes);
+                    data.derived = deriveAttributes(asShipLevelLookup(data.levels), initialDerived);
                     updateOutputTables(dialogContentRoot, data);
                 };
                 slider.addEventListener("change", listener);
@@ -317,10 +326,21 @@ function updateActor(actorName, levelsJson) {
         }
     });
 }
-Hooks.on("init", function () { });
+Hooks.on("renderChatMessage", function (message, messageRoot) {
+    if (message.data.flags.shipyardChatMessage) {
+        var inputId = "shipyardChatMessageId";
+        var _a = JSON.parse(message.data.content), dialogData_1 = _a.dialogData, actorName_1 = _a.actorName;
+        messageRoot.find(".message-content").html(_templates_chatMessage_handlebars__WEBPACK_IMPORTED_MODULE_3___default()({
+            tableHtml: _templates_table_handlebars__WEBPACK_IMPORTED_MODULE_1___default()(dialogData_1),
+            inputId: inputId,
+            mayNotApply: !game.user.isGM
+        }));
+        var buttonInput = messageRoot.find("#" + inputId);
+        buttonInput.on("click", function () { return updateActor(actorName_1, cloneAndRemoveDelta(dialogData_1.levels)); });
+    }
+});
 Hooks.on("ready", function () {
     window["shipyardShow"] = function (actorName) { return showDialog(actorName); };
-    window["shipyardUpdateActor"] = function (actorName, levelsJson) { return updateActor(actorName, levelsJson); };
 });
 
 
@@ -363,14 +383,12 @@ module.exports = (Handlebars["default"] || Handlebars).template({"1":function(co
 
   return "<div style=\"display: flex; flex-direction: row; justify-content: space-around; align-items: start;\">\r\n    <div style=\"width: 350px;\">\r\n        <h1>Ship Levels</h1>\r\n"
     + ((stack1 = lookupProperty(helpers,"each").call(alias1,(depth0 != null ? lookupProperty(depth0,"levels") : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":4,"column":8},"end":{"line":7,"column":17}}})) != null ? stack1 : "")
-    + "    </div>\r\n\r\n    <div style=\"width: 350px;\">\r\n        <h1>Effects</h1>\r\n        <div style=\"display: flex; flex-direction: row; align-items: center; justify-content: center;\">\r\n            <input id=\""
-    + alias4(((helper = (helper = lookupProperty(helpers,"sendToChatId") || (depth0 != null ? lookupProperty(depth0,"sendToChatId") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"sendToChatId","hash":{},"data":data,"loc":{"start":{"line":13,"column":23},"end":{"line":13,"column":39}}}) : helper)))
-    + "\" style=\"margin-right: 5px;\" type=\"button\" value=\"Send to Chat\">\r\n            <input id=\""
-    + alias4(((helper = (helper = lookupProperty(helpers,"sendToGmId") || (depth0 != null ? lookupProperty(depth0,"sendToGmId") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"sendToGmId","hash":{},"data":data,"loc":{"start":{"line":14,"column":23},"end":{"line":14,"column":37}}}) : helper)))
-    + "\" type=\"button\" value=\"Send to GM\">\r\n        </div>\r\n        <table id="
-    + alias4(((helper = (helper = lookupProperty(helpers,"mainAttributeTableId") || (depth0 != null ? lookupProperty(depth0,"mainAttributeTableId") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"mainAttributeTableId","hash":{},"data":data,"loc":{"start":{"line":16,"column":18},"end":{"line":16,"column":42}}}) : helper)))
+    + "    </div>\r\n\r\n    <div style=\"width: 350px;\">\r\n        <h1>Effects</h1>\r\n        <input id=\""
+    + alias4(((helper = (helper = lookupProperty(helpers,"sendToChatId") || (depth0 != null ? lookupProperty(depth0,"sendToChatId") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"sendToChatId","hash":{},"data":data,"loc":{"start":{"line":12,"column":19},"end":{"line":12,"column":35}}}) : helper)))
+    + "\" style=\"margin-right: 5px;\" type=\"button\" value=\"Send to Chat\">\r\n        <table id="
+    + alias4(((helper = (helper = lookupProperty(helpers,"mainAttributeTableId") || (depth0 != null ? lookupProperty(depth0,"mainAttributeTableId") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"mainAttributeTableId","hash":{},"data":data,"loc":{"start":{"line":13,"column":18},"end":{"line":13,"column":42}}}) : helper)))
     + "></table>\r\n        <table id="
-    + alias4(((helper = (helper = lookupProperty(helpers,"outputTableId") || (depth0 != null ? lookupProperty(depth0,"outputTableId") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"outputTableId","hash":{},"data":data,"loc":{"start":{"line":17,"column":18},"end":{"line":17,"column":35}}}) : helper)))
+    + alias4(((helper = (helper = lookupProperty(helpers,"outputTableId") || (depth0 != null ? lookupProperty(depth0,"outputTableId") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"outputTableId","hash":{},"data":data,"loc":{"start":{"line":14,"column":18},"end":{"line":14,"column":35}}}) : helper)))
     + "></table>\r\n    </div>\r\n</div>";
 },"useData":true});
 
@@ -2006,6 +2024,31 @@ module.exports = (Handlebars["default"] || Handlebars).template({"1":function(co
     + "</tr>\r\n<tr>\r\n"
     + ((stack1 = lookupProperty(helpers,"each").call(alias1,(depth0 != null ? lookupProperty(depth0,"mainAttributes") : depth0),{"name":"each","hash":{},"fn":container.program(3, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":7,"column":4},"end":{"line":9,"column":13}}})) != null ? stack1 : "")
     + "</tr>";
+},"useData":true});
+
+/***/ }),
+/* 28 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var Handlebars = __webpack_require__(2);
+function __default(obj) { return obj && (obj.__esModule ? obj["default"] : obj); }
+module.exports = (Handlebars["default"] || Handlebars).template({"1":function(container,depth0,helpers,partials,data) {
+    return "disabled";
+},"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", lookupProperty = container.lookupProperty || function(parent, propertyName) {
+        if (Object.prototype.hasOwnProperty.call(parent, propertyName)) {
+          return parent[propertyName];
+        }
+        return undefined
+    };
+
+  return "<div style=\"display: flex; flex-direction: column; align-items: center;\">\r\n    <table>"
+    + ((stack1 = ((helper = (helper = lookupProperty(helpers,"tableHtml") || (depth0 != null ? lookupProperty(depth0,"tableHtml") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"tableHtml","hash":{},"data":data,"loc":{"start":{"line":2,"column":11},"end":{"line":2,"column":26}}}) : helper))) != null ? stack1 : "")
+    + "</table>\r\n    <input type=\"button\" "
+    + ((stack1 = lookupProperty(helpers,"if").call(alias1,(depth0 != null ? lookupProperty(depth0,"mayNotApply") : depth0),{"name":"if","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":3,"column":25},"end":{"line":3,"column":59}}})) != null ? stack1 : "")
+    + " id="
+    + container.escapeExpression(((helper = (helper = lookupProperty(helpers,"inputId") || (depth0 != null ? lookupProperty(depth0,"inputId") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"inputId","hash":{},"data":data,"loc":{"start":{"line":3,"column":63},"end":{"line":3,"column":74}}}) : helper)))
+    + " value=\"APPLY (GM only)\"/>\r\n</div>\r\n";
 },"useData":true});
 
 /***/ })

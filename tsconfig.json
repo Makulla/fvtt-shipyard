@@ -6,6 +6,7 @@
     "strict": true,
     "rootDir": "src",
     "sourceMap": false,
-    "typeRoots": ["types/foundry"]
+    "typeRoots": ["types/foundry"],
+    "skipLibCheck": true
   }
 }
