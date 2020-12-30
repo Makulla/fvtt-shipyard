@@ -278,6 +278,10 @@ function getLevelsFromActorOrDefault(actorName) {
     ];
 }
 function updateActor(actorName, levelsJson) {
+    if (!game.user.isGM) {
+        ui.notifications.error("Shipyard: only GM may update ships.");
+        return;
+    }
     var abilities = deriveAbilities(asShipLevelLookup(levelsJson));
     var getAbility = function (type) { return abilities.filter(function (attr) { return attr.type === type; })[0].value; };
     var derivedAttributes = deriveAttributes(asShipLevelLookup(levelsJson));

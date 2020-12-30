@@ -16,6 +16,9 @@ declare const ui: {
 declare const game: {
     actors: {
         find(predicate: (actor: { name: string }) => boolean): Actor | null;
+    },
+    user: {
+        isGM: boolean;
     }
 }
 

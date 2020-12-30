@@ -217,6 +217,11 @@ function getLevelsFromActorOrDefault(actorName: string): ShipLevel[]
 
 function updateActor(actorName: string, levelsJson: ShipLevel[]) 
 {
+    if(!game.user.isGM) {
+        ui.notifications.error("Shipyard: only GM may update ships.");
+        return;
+    }
+
     const abilities = deriveAbilities(asShipLevelLookup(levelsJson));
     const getAbility = (type: AbilityType) => abilities.filter(attr => attr.type === type)[0].value;
 
