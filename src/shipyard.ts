@@ -17,6 +17,8 @@ function deriveAttributes(shipLevels: ShipLevelLookup, previous?: readonly Deriv
             delta: buildDelta(roundDecimal(attribute.value - (previous?.[result.length].value ?? attribute.value)))
         });
 
+    const feetPerMeter = 3.28084;
+
     const masts = Math.ceil(shipLevels.sails * 0.5);
     const hitPoints = Math.floor(shipLevels.hull * 50 + shipLevels.cargo * 15 + shipLevels.chambers * 15);
     const cargoHold = roundDecimal(0.5 + (shipLevels.cargo - 1) ** 2 * 0.8);
@@ -25,15 +27,14 @@ function deriveAttributes(shipLevels: ShipLevelLookup, previous?: readonly Deriv
 
     const mass = roundDecimal(cargoHold * 1.2 + hitPoints * 0.1 + shipLevels.sails * 0.01 + masts * 5 + passengers * 0.35 + crew * 0.2 + shipLevels.smallWeaponSlots * 2.0);
 
-    const maximumTravelHeight = roundDecimal(150 + (shipLevels.voidCoreStrength - 1)**2 * 100 - 50 * Math.log(0.25 * mass));
+    const maximumTravelHeight = roundDecimal((150 + (shipLevels.voidCoreStrength - 1)**2 * 100 - 50 * Math.log(0.25 * mass)) * feetPerMeter);
     const sailPropulsion = 1 + shipLevels.sails * 4 - shipLevels.sails ** (1.55);
     const travelPaceHour = roundDecimal(sailPropulsion - mass * 0.1);
     const fuelConsumption = roundDecimal(((10 ** (travelPaceHour * 0.3) + mass ** 1.5) * 1.5 ** (shipLevels.voidCoreStrength - 1)) / (shipLevels.voidCoreEfficiency ** 0.75) );
     const crewUpkeep = roundDecimal(crew * 0.75);
 
-    const feetPerMeter = 3.28084;
     const length = Math.floor(mass * 0.95 * feetPerMeter);
-    const width = Math.floor((length / 4) * feetPerMeter);
+    const width = Math.floor((length / 4));
 
     add({ type: "armorClass", label: "Armor Class", value: 9 + shipLevels.hull });
     add({ type: "hitPoints", label: "Hit Points", value: hitPoints });
