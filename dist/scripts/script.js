@@ -195,12 +195,12 @@ function buildDialogData(levels) {
     var mainAttributes = deriveAbilities(asShipLevelLookup(levels));
     var derived = deriveAttributes(asShipLevelLookup(levels));
     return {
-        outputTableId: "boatyfaceOutputTable",
-        mainAttributeTableId: "boatyfaceMainAttributeTable",
+        outputTableId: "shipyardOutputTable",
+        mainAttributeTableId: "shipyardeMainAttributeTable",
         levels: levels,
         mainAttributes: mainAttributes,
-        sendToChatId: "boatyfaceSendToChat",
-        sendToGmId: "boatyfaceSendToGm",
+        sendToChatId: "shipyardSendToChat",
+        sendToGmId: "shipyardSendToGm",
         derived: derived
     };
 }
@@ -238,7 +238,7 @@ function showDialog(actorName) {
                 }
             }); });
             data.levels.forEach(function (level, index) {
-                var slider = dialogContentRoot.querySelector("#boatyFace" + level.type + "Slider");
+                var slider = dialogContentRoot.querySelector("#shipyard" + level.type + "Slider");
                 var listener = function () {
                     level.value = parseInt(slider.value);
                     var delta = level.value - initialLevels[index].value;
@@ -366,12 +366,12 @@ module.exports = (Handlebars["default"] || Handlebars).template({"1":function(co
     + alias4(((helper = (helper = lookupProperty(helpers,"max") || (depth0 != null ? lookupProperty(depth0,"max") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"max","hash":{},"data":data,"loc":{"start":{"line":5,"column":52},"end":{"line":5,"column":59}}}) : helper)))
     + ")</div>\r\n        <input type=\"range\" value="
     + alias4(((helper = (helper = lookupProperty(helpers,"value") || (depth0 != null ? lookupProperty(depth0,"value") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"value","hash":{},"data":data,"loc":{"start":{"line":6,"column":34},"end":{"line":6,"column":43}}}) : helper)))
-    + " id=boatyFace"
-    + alias4(((helper = (helper = lookupProperty(helpers,"type") || (depth0 != null ? lookupProperty(depth0,"type") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"type","hash":{},"data":data,"loc":{"start":{"line":6,"column":56},"end":{"line":6,"column":64}}}) : helper)))
+    + " id=shipyard"
+    + alias4(((helper = (helper = lookupProperty(helpers,"type") || (depth0 != null ? lookupProperty(depth0,"type") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"type","hash":{},"data":data,"loc":{"start":{"line":6,"column":55},"end":{"line":6,"column":63}}}) : helper)))
     + "Slider min="
-    + alias4(((helper = (helper = lookupProperty(helpers,"min") || (depth0 != null ? lookupProperty(depth0,"min") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"min","hash":{},"data":data,"loc":{"start":{"line":6,"column":75},"end":{"line":6,"column":82}}}) : helper)))
+    + alias4(((helper = (helper = lookupProperty(helpers,"min") || (depth0 != null ? lookupProperty(depth0,"min") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"min","hash":{},"data":data,"loc":{"start":{"line":6,"column":74},"end":{"line":6,"column":81}}}) : helper)))
     + " max="
-    + alias4(((helper = (helper = lookupProperty(helpers,"max") || (depth0 != null ? lookupProperty(depth0,"max") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"max","hash":{},"data":data,"loc":{"start":{"line":6,"column":87},"end":{"line":6,"column":94}}}) : helper)))
+    + alias4(((helper = (helper = lookupProperty(helpers,"max") || (depth0 != null ? lookupProperty(depth0,"max") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"max","hash":{},"data":data,"loc":{"start":{"line":6,"column":86},"end":{"line":6,"column":93}}}) : helper)))
     + " step=\"1\">\r\n";
 },"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
     var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {

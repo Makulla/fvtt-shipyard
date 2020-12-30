@@ -115,12 +115,12 @@ function buildDialogData(levels: ShipLevel[]): DialogData
     const derived = deriveAttributes(asShipLevelLookup(levels));
 
     return { 
-        outputTableId: "boatyfaceOutputTable",
-        mainAttributeTableId: "boatyfaceMainAttributeTable",
+        outputTableId: "shipyardOutputTable",
+        mainAttributeTableId: "shipyardeMainAttributeTable",
         levels,
         mainAttributes,
-        sendToChatId: "boatyfaceSendToChat",
-        sendToGmId: "boatyfaceSendToGm",
+        sendToChatId: "shipyardSendToChat",
+        sendToGmId: "shipyardSendToGm",
         derived
     };
 }
@@ -165,7 +165,7 @@ function showDialog(actorName: string) {
             }));
 
             data.levels.forEach((level, index) => {
-                const slider = dialogContentRoot.querySelector(`#boatyFace${level.type}Slider`) as HTMLInputElement;
+                const slider = dialogContentRoot.querySelector(`#shipyard${level.type}Slider`) as HTMLInputElement;
                 const listener = () => 
                 {
                     level.value = parseInt(slider.value);

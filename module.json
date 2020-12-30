@@ -1,7 +1,7 @@
 {
-    "name": "boatyface",
-    "title": "Boatyface",
-    "description": "A module for the Foundry Virtual Tabletop framework.",
+    "name": "shipyard",
+    "title": "Shipyard",
+    "description": "A Voidcruiser Shipyard module for the Foundry Virtual Tabletop framework.",
     "author": "Maku",
     "version": "1.0.0",
     "minimumCoreVersion": "0.7.9",
@@ -9,7 +9,7 @@
     "scripts": [
         "dist/scripts/script.js"
     ],
-    "url": "https://github.com/Makulla/fvtt-boatyface",
-    "manifest": "https://raw.githubusercontent.com/Makulla/fvtt-boatyface/main/module.json",
-    "download": "https://github.com/Makulla/fvtt-boatyface/archive/main.zip"
+    "url": "https://github.com/Makulla/fvtt-shipyard",
+    "manifest": "https://raw.githubusercontent.com/Makulla/fvtt-shipyard/main/module.json",
+    "download": "https://github.com/Makulla/fvtt-shipyard/archive/main.zip"
   }
