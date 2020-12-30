@@ -131,10 +131,12 @@ function deriveAttributes(shipLevels, previous) {
     var travelPaceHour = roundDecimal(sailPropulsion - mass * 0.1);
     var fuelConsumption = roundDecimal(((Math.pow(10, (travelPaceHour * 0.3)) + Math.pow(mass, 1.5)) * Math.pow(1.5, (shipLevels.voidCoreStrength - 1))) / (Math.pow(shipLevels.voidCoreEfficiency, 0.75)));
     var crewUpkeep = roundDecimal(crew * 0.75);
+    var length = Math.floor(mass * 0.95);
+    var width = Math.floor(length / 4);
     add({ type: "armorClass", label: "Armor Class", value: 9 + shipLevels.hull });
     add({ type: "hitPoints", label: "Hit Points", value: hitPoints });
-    add({ type: "length", label: "Length (ft)", value: 100 });
-    add({ type: "width", label: "Width (ft)", value: 20 });
+    add({ type: "length", label: "Length (ft)", value: length });
+    add({ type: "width", label: "Width (ft)", value: width });
     add({ type: "mass", label: "Mass (tons)", value: mass });
     add({ type: "cargoHold", label: "Cargo Hold (tons)", value: cargoHold });
     add({ type: "masts", label: "Masts", value: masts });
